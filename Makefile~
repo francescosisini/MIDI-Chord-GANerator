@@ -1,8 +1,8 @@
 # Nome del file eseguibile
 TARGET = goro
 
-# File sorgenti
-SRC = goro.c chords.c melody.c
+# File sorgente
+SRC = goro.c
 
 # Percorsi di inclusione per le librerie
 INCLUDES = -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include
