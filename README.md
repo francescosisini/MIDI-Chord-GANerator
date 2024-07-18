@@ -15,5 +15,19 @@ This project is a simple MIDI chord sequence generator written in C, with future
 1. **Clone the repository**:
 
    ```sh
-   git clone https://github.com/your-username/MIDI-Chord-GANerator.git
+   git clone https://github.com/francescosisini/MIDI-Chord-GANerator.git
    cd MIDI-Chord-GANerator
+
+2. **Install Dependencies:**
+   ```sh
+   sudo apt-get install libsmf-dev libglib2.0-dev
+
+3. **Compile the program:**
+   ```sh
+   make
+
+4. **Run the program:**
+   ```sh
+   make run
+
+
