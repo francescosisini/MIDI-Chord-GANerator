@@ -1,0 +1,96 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "midifile-master/MidiFile.h"
+
+#define MAX_CHORDS 100
+#define MAX_LENGTH 10
+
+void get_chord_sequence(char chords[MAX_CHORDS][MAX_LENGTH], int *num_chords) {
+    printf("Inserisci il numero di accordi nel giro armonico: ");
+    scanf("%d", num_chords);
+    
+    printf("Inserisci gli accordi (es. C, G, Am, F):\n");
+    for (int i = 0; i < *num_chords; i++) {
+        printf("Accordo %d: ", i + 1);
+        scanf("%s", chords[i]);
+    }
+}
+
+// Mappa degli accordi alle loro note MIDI corrispondenti
+int chord_to_notes(char* chord, int* notes) {
+    if (strcmp(chord, "C") == 0) {
+        notes[0] = 60; notes[1] = 64; notes[2] = 67; // C E G
+        return 3;
+    } else if (strcmp(chord, "G") == 0) {
+        notes[0] = 67; notes[1] = 71; notes[2] = 74; // G B D
+        return 3;
+    } else if (strcmp(chord, "Am") == 0) {
+        notes[0] = 69; notes[1] = 72; notes[2] = 76; // A C E
+        return 3;
+    } else if (strcmp(chord, "F") == 0) {
+        notes[0] = 65; notes[1] = 69; notes[2] = 72; // F A C
+        return 3;
+    } else if (strcmp(chord, "D") == 0) {
+        notes[0] = 62; notes[1] = 66; notes[2] = 69; // D F# A
+        return 3;
+    } else if (strcmp(chord, "E") == 0) {
+        notes[0] = 64; notes[1] = 68; notes[2] = 71; // E G# B
+        return 3;
+    } else if (strcmp(chord, "Em") == 0) {
+        notes[0] = 64; notes[1] = 67; notes[2] = 71; // E G B
+        return 3;
+    } else if (strcmp(chord, "Dm") == 0) {
+        notes[0] = 62; notes[1] = 65; notes[2] = 69; // D F A
+        return 3;
+    } else if (strcmp(chord, "Bb") == 0) {
+        notes[0] = 70; notes[1] = 74; notes[2] = 77; // Bb D F
+        return 3;
+    } else if (strcmp(chord, "B") == 0) {
+        notes[0] = 71; notes[1] = 75; notes[2] = 79; // B D# F#
+        return 3;
+    } else if (strcmp(chord, "Ab") == 0) {
+        notes[0] = 68; notes[1] = 72; notes[2] = 75; // Ab C Eb
+        return 3;
+    }
+    // Aggiungi altri accordi qui secondo necessità
+    return 0;
+}
+
+void write_midi(char chords[MAX_CHORDS][MAX_LENGTH], int num_chords, const char* filename) {
+    int notes[3];
+    int num_notes;
+
+    MidiFile_t midi_file = MidiFile_new(1, MIDI_FILE_DIVISION_TYPE_PPQ, 480);
+    MidiFileTrack_t track = MidiFile_createTrack(midi_file);
+    MidiFile_setTicksPerQuarterNote(midi_file, 480);
+    int time = 0;
+
+    for (int i = 0; i < num_chords; i++) {
+        num_notes = chord_to_notes(chords[i], notes);
+        for (int j = 0; j < num_notes; j++) {
+            // Note On
+            MidiFileTrack_createNoteOnEvent(track, time, 0, notes[j], 100);
+        }
+        time += 480; // Quarter note duration
+
+        for (int j = 0; j < num_notes; j++) {
+            // Note Off
+            MidiFileTrack_createNoteOffEvent(track, time, 0, notes[j], 100);
+        }
+    }
+
+    MidiFile_save(midi_file, filename);
+    MidiFile_free(midi_file);
+}
+
+int main() {
+    char chords[MAX_CHORDS][MAX_LENGTH];
+    int num_chords;
+
+    get_chord_sequence(chords, &num_chords);
+    write_midi(chords, num_chords, "output.mid");
+
+    printf("File MIDI generato: output.mid\n");
+    return 0;
+}
