@@ -78,7 +78,7 @@ int chord_to_notes(const char* chord, int* notes) {
         notes[0] = 71; notes[1] = 74; notes[2] = 79; // B D F#
         return 3;
     }
-    // Accordi di settima maggiore (fighi)
+    // Accordi di settima maggiore
     else if (strcmp(chord, "Cmaj7") == 0) {
         notes[0] = 60; notes[1] = 64; notes[2] = 67; notes[3] = 71; // C E G B
         return 4;
