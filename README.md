@@ -44,53 +44,23 @@ Esegui il programma con:
 make run
 ```
 
-Durante l'esecuzione, il programma ti chiederà di inserire informazioni sulla progressione degli accordi, le durate degli accordi, il numero di ripetizioni, se generare una melodia e se la melodia deve seguire la tonalità.
+./goro -m 4 -r 2 -b -d -g -k -p 90 -v 100 -q 80 -w 110 -o test_NK.mid C 4 G 4 Am 4 F 4 C 4 G 4 F 4 C 4
+Opzioni disponibili:
 
-Esempio di esecuzione:
+    -m: Imposta il metro (3 per 3/4, 4 per 4/4)
+    -r: Numero di ripetizioni del giro armonico
+    -b: Includi la linea di basso
+    -d: Includi la batteria
+    -g: Genera una melodia casuale
+    -k: La melodia casuale segue la tonalità
+    -p: Volume della traccia del piano (0-127)
+    -v: Volume della traccia della batteria (0-127)
+    -q: Volume della traccia del basso (0-127)
+    -w: Volume della traccia della melodia (0-127)
+    -o: Nome del file di output
+```
+./goro -m 4 -r 2 -b -d -g -k -p 90 -v 100 -q 80 -w 110 -o let_it_be.mid C 4 G 4 Am 4 F 4 C 4 G 4 F 4 C 4
 
-```plaintext
-Scegli il metro (3 per 3/4 o 4 per 4/4): 4
-Inserisci il numero di accordi nel giro armonico: 4
-Inserisci gli accordi (es. C, G, Am, F) e la loro durata in quarti:
-Accordo 1: C
-Durata in quarti (1, 2, ... 4): 4
-Accordo 2: Am
-Durata in quarti (1, 2, ... 4): 4
-Accordo 3: G
-Durata in quarti (1, 2, ... 4): 4
-Accordo 4: F
-Durata in quarti (1, 2, ... 4): 4
-Quante volte ripetere il giro armonico? 2
-Vuoi generare una melodia casuale? (1 per sì, 0 per no): 1
-Vuoi che la melodia segua la tonalità? (1 per sì, 0 per no): 1
-File MIDI generato: output.mid
-```
-Esempio di esecuzione utilizzando il giro di accordi di "Let It Be" dei The Beatles:
-```plaintext
-Scegli il metro (3 per 3/4 o 4 per 4/4): 4
-Inserisci il numero di accordi nel giro armonico: 8
-Inserisci gli accordi (es. C, G, Am, F) e la loro durata in quarti:
-Accordo 1: C
-Durata in quarti (1, 2, ... 4): 4
-Accordo 2: G
-Durata in quarti (1, 2, ... 4): 4
-Accordo 3: Am
-Durata in quarti (1, 2, ... 4): 4
-Accordo 4: F
-Durata in quarti (1, 2, ... 4): 4
-Accordo 5: C
-Durata in quarti (1, 2, ... 4): 4
-Accordo 6: G
-Durata in quarti (1, 2, ... 4): 4
-Accordo 7: F
-Durata in quarti (1, 2, ... 4): 4
-Accordo 8: C
-Durata in quarti (1, 2, ... 4): 4
-Quante volte ripetere il giro armonico? 2
-Vuoi generare una melodia casuale? (1 per sì, 0 per no): 1
-Vuoi che la melodia segua la tonalità? (1 per sì, 0 per no): 1
-File MIDI generato: output.mid
-```
 
 ## Struttura del Progetto
 
