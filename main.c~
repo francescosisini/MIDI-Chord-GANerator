@@ -51,8 +51,14 @@ void write_midi(char chords[MAX_CHORDS][MAX_LENGTH], int *durations, int num_cho
     int num_notes;
 
     smf_t* smf = smf_new();
-    smf_track_t* track = smf_track_new();
-    smf_add_track(smf, track);
+    smf_track_t* piano_track = smf_track_new();
+    smf_track_t* drum_track = smf_track_new();
+    smf_track_t* bass_track = smf_track_new();
+    smf_track_t* melody_track = smf_track_new();
+    smf_add_track(smf, piano_track);
+    smf_add_track(smf, drum_track);
+    smf_add_track(smf, bass_track);
+    smf_add_track(smf, melody_track);
 
     double time_seconds = 0.0;
     double quarter_note_duration = 0.5; // durata di una nota da un quarto a 120 BPM
@@ -61,24 +67,36 @@ void write_midi(char chords[MAX_CHORDS][MAX_LENGTH], int *durations, int num_cho
         for (int i = 0; i < num_chords; i++) {
             num_notes = chord_to_notes(chords[i], notes);
             
-            // Aggiungi eventi "Note On" per tutte le note dell'accordo
+            // Aggiungi eventi "Note On" per tutte le note dell'accordo nel piano
             for (int j = 0; j < num_notes; j++) {
                 smf_event_t* event_on = smf_event_new_from_bytes(0x90, notes[j], 100);
-                smf_track_add_event_seconds(track, event_on, time_seconds);
+                smf_track_add_event_seconds(piano_track, event_on, time_seconds);
             }
 
-            // Genera note casuali durante l'accordo se richiesto
+            // Genera note casuali durante l'accordo se richiesto nella traccia melodia
             if (generate_melody) {
-                generate_random_notes(track, 4, time_seconds, quarter_note_duration * durations[i]);
+                generate_random_notes(melody_track, 4, time_seconds, quarter_note_duration * durations[i]);
             }
+
+            // Aggiungi un colpo di cassa (nota MIDI 36) sulla batteria all'inizio di ogni accordo
+            smf_event_t* kick_on = smf_event_new_from_bytes(0x99, 36, 100);
+            smf_track_add_event_seconds(drum_track, kick_on, time_seconds);
+            smf_event_t* kick_off = smf_event_new_from_bytes(0x89, 36, 100);
+            smf_track_add_event_seconds(drum_track, kick_off, time_seconds + 0.1);
+
+            // Aggiungi una nota di basso (nota MIDI 40) all'inizio di ogni accordo
+            smf_event_t* bass_on = smf_event_new_from_bytes(0x90, 40, 100);
+            smf_track_add_event_seconds(bass_track, bass_on, time_seconds);
+            smf_event_t* bass_off = smf_event_new_from_bytes(0x80, 40, 100);
+            smf_track_add_event_seconds(bass_track, bass_off, time_seconds + quarter_note_duration * durations[i]);
 
             // Incrementa il tempo per la durata dell'accordo
             time_seconds += quarter_note_duration * durations[i];
 
-            // Aggiungi eventi "Note Off" per tutte le note dell'accordo
+            // Aggiungi eventi "Note Off" per tutte le note dell'accordo nel piano
             for (int j = 0; j < num_notes; j++) {
                 smf_event_t* event_off = smf_event_new_from_bytes(0x80, notes[j], 100);
-                smf_track_add_event_seconds(track, event_off, time_seconds);
+                smf_track_add_event_seconds(piano_track, event_off, time_seconds);
             }
         }
     }

@@ -2,7 +2,7 @@
 TARGET = goro
 
 # File sorgenti
-SRC = goro.c chords.c melody.c
+SRC = main.c chords.c melody.c key_detection.c
 
 # Percorsi di inclusione per le librerie
 INCLUDES = -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include
@@ -22,6 +22,10 @@ all: $(TARGET)
 # Regola per creare l'eseguibile
 $(TARGET): $(SRC)
 	$(CC) -o $(TARGET) $(SRC) $(CFLAGS)
+
+# Regola per installare le dipendenze
+install-dependencies:
+	sudo apt-get install libsmf-dev libglib2.0-dev
 
 # Regola per pulire i file generati
 clean:
