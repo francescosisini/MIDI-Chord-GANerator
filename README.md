@@ -58,8 +58,13 @@ Opzioni disponibili:
     -q: Volume della traccia del basso (0-127)
     -w: Volume della traccia della melodia (0-127)
     -o: Nome del file di output
+
+    Dopo le opzioni, inserire una sequenza di accordi seguiti dalla durata in quarti.
+
+    Esempio:
+    ./goro -m 4 -r 2 -b -d -g -k -p 90 -v 100 -q 80 -w 110 -o let_it_be.mid C 4 G 4 Am 4 F 4 C 4 G 4 F 4 C 4
+
 ```
-./goro -m 4 -r 2 -b -d -g -k -p 90 -v 100 -q 80 -w 110 -o let_it_be.mid C 4 G 4 Am 4 F 4 C 4 G 4 F 4 C 4
 
 
 ## Struttura del Progetto
