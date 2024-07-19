@@ -1,81 +1,71 @@
 #include "melody.h"
 #include <stdlib.h>
+#include <time.h>
 #include <string.h>
 
-// Funzione per ottenere le note della scala maggiore data una tonalità
+// Mappa per le scale maggiori diatoniche
+const int major_scale_intervals[] = {2, 2, 1, 2, 2, 2, 1};
+
+void generate_random_notes(smf_track_t* track, int num_notes, double start_time, double duration, int volume) {
+    srand(time(NULL));
+    double note_duration = duration / num_notes;
+    for (int i = 0; i < num_notes; i++) {
+        int note = rand() % 128; // Note casuale tra 0 e 127
+        smf_event_t* note_on = smf_event_new_from_bytes(0x90, note, volume);
+        smf_track_add_event_seconds(track, note_on, start_time + i * note_duration);
+        smf_event_t* note_off = smf_event_new_from_bytes(0x80, note, volume);
+        smf_track_add_event_seconds(track, note_off, start_time + (i + 1) * note_duration);
+    }
+}
+
+void generate_random_notes_with_scale(smf_track_t* track, int num_notes, double start_time, double duration, int* scale_notes, int num_scale_notes, int volume) {
+    srand(time(NULL));
+    double note_duration = duration / num_notes;
+    for (int i = 0; i < num_notes; i++) {
+        int note = scale_notes[rand() % num_scale_notes]; // Note casuale dalla scala
+        smf_event_t* note_on = smf_event_new_from_bytes(0x90, note, volume);
+        smf_track_add_event_seconds(track, note_on, start_time + i * note_duration);
+        smf_event_t* note_off = smf_event_new_from_bytes(0x80, note, volume);
+        smf_track_add_event_seconds(track, note_off, start_time + (i + 1) * note_duration);
+    }
+}
+
 void get_scale_notes(const char* key, int* scale_notes, int* num_notes) {
+    int base_note;
+    *num_notes = 7; // Una scala diatonica maggiore ha 7 note
+
+    // Determina la nota base dalla tonalità
     if (strcmp(key, "C") == 0) {
-        int c_major[] = {60, 62, 64, 65, 67, 69, 71}; // C D E F G A B
-        memcpy(scale_notes, c_major, sizeof(c_major));
+        base_note = 60; // C
     } else if (strcmp(key, "C#") == 0 || strcmp(key, "Db") == 0) {
-        int csharp_major[] = {61, 63, 65, 66, 68, 70, 72}; // C# D# F F# G# A# C
-        memcpy(scale_notes, csharp_major, sizeof(csharp_major));
+        base_note = 61; // C# / Db
     } else if (strcmp(key, "D") == 0) {
-        int d_major[] = {62, 64, 66, 67, 69, 71, 73}; // D E F# G A B C#
-        memcpy(scale_notes, d_major, sizeof(d_major));
+        base_note = 62; // D
     } else if (strcmp(key, "D#") == 0 || strcmp(key, "Eb") == 0) {
-        int dsharp_major[] = {63, 65, 67, 68, 70, 72, 74}; // D# F G G# A# C D
-        memcpy(scale_notes, dsharp_major, sizeof(dsharp_major));
+        base_note = 63; // D# / Eb
     } else if (strcmp(key, "E") == 0) {
-        int e_major[] = {64, 66, 68, 69, 71, 73, 75}; // E F# G# A B C# D#
-        memcpy(scale_notes, e_major, sizeof(e_major));
+        base_note = 64; // E
     } else if (strcmp(key, "F") == 0) {
-        int f_major[] = {65, 67, 69, 70, 72, 74, 76}; // F G A Bb C D E
-        memcpy(scale_notes, f_major, sizeof(f_major));
+        base_note = 65; // F
     } else if (strcmp(key, "F#") == 0 || strcmp(key, "Gb") == 0) {
-        int fsharp_major[] = {66, 68, 70, 71, 73, 75, 77}; // F# G# A# B C# D# F
-        memcpy(scale_notes, fsharp_major, sizeof(fsharp_major));
+        base_note = 66; // F# / Gb
     } else if (strcmp(key, "G") == 0) {
-        int g_major[] = {67, 69, 71, 72, 74, 76, 78}; // G A B C D E F#
-        memcpy(scale_notes, g_major, sizeof(g_major));
+        base_note = 67; // G
     } else if (strcmp(key, "G#") == 0 || strcmp(key, "Ab") == 0) {
-        int gsharp_major[] = {68, 70, 72, 73, 75, 77, 79}; // G# A# C C# D# F G
-        memcpy(scale_notes, gsharp_major, sizeof(gsharp_major));
+        base_note = 68; // G# / Ab
     } else if (strcmp(key, "A") == 0) {
-        int a_major[] = {69, 71, 73, 74, 76, 78, 80}; // A B C# D E F# G#
-        memcpy(scale_notes, a_major, sizeof(a_major));
+        base_note = 69; // A
     } else if (strcmp(key, "A#") == 0 || strcmp(key, "Bb") == 0) {
-        int asharp_major[] = {70, 72, 74, 75, 77, 79, 81}; // A# C D D# F G A
-        memcpy(scale_notes, asharp_major, sizeof(asharp_major));
+        base_note = 70; // A# / Bb
     } else if (strcmp(key, "B") == 0) {
-        int b_major[] = {71, 73, 75, 76, 78, 80, 82}; // B C# D# E F# G# A#
-        memcpy(scale_notes, b_major, sizeof(b_major));
+        base_note = 71; // B
     } else {
-        // Se la tonalità non è riconosciuta, di default usa la scala di C maggiore
-        int c_major[] = {60, 62, 64, 65, 67, 69, 71}; // C D E F G A B
-        memcpy(scale_notes, c_major, sizeof(c_major));
+        base_note = 60; // Default to C
     }
-    *num_notes = 7; // Ogni scala maggiore ha 7 note
-}
 
-void generate_random_notes(smf_track_t *track, int num_notes, double start_time, double duration) {
-    for (int i = 0; i < num_notes; i++) {
-        int note = 60 + rand() % 25; // Genera una nota casuale tra C4 e C6
-        double note_start = start_time + ((double)rand() / RAND_MAX) * duration;
-        double note_duration = ((double)rand() / RAND_MAX) * duration / 2;
-
-        // Aggiungi evento "Note On"
-        smf_event_t* event_on = smf_event_new_from_bytes(0x90, note, 100);
-        smf_track_add_event_seconds(track, event_on, note_start);
-
-        // Aggiungi evento "Note Off"
-        smf_event_t* event_off = smf_event_new_from_bytes(0x80, note, 100);
-        smf_track_add_event_seconds(track, event_off, note_start + note_duration);
-    }
-}
-
-void generate_random_notes_with_scale(smf_track_t *track, int num_notes, double start_time, double duration, int* scale_notes, int num_scale_notes) {
-    for (int i = 0; i < num_notes; i++) {
-        int note = scale_notes[rand() % num_scale_notes]; // Genera una nota casuale dalla scala
-        double note_start = start_time + ((double)rand() / RAND_MAX) * duration;
-        double note_duration = ((double)rand() / RAND_MAX) * duration / 2;
-
-        // Aggiungi evento "Note On"
-        smf_event_t* event_on = smf_event_new_from_bytes(0x90, note, 100);
-        smf_track_add_event_seconds(track, event_on, note_start);
-
-        // Aggiungi evento "Note Off"
-        smf_event_t* event_off = smf_event_new_from_bytes(0x80, note, 100);
-        smf_track_add_event_seconds(track, event_off, note_start + note_duration);
+    // Costruisci la scala maggiore diatonica basata sulla nota base
+    scale_notes[0] = base_note;
+    for (int i = 1; i < *num_notes; i++) {
+        scale_notes[i] = scale_notes[i - 1] + major_scale_intervals[i - 1];
     }
 }
