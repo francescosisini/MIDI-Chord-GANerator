@@ -85,7 +85,7 @@ Questo progetto è concesso in licenza sotto la licenza MIT. Vedi il file [LICEN
 
 ## Autori
 
-- [Il tuo Nome](https://github.com/tuo-username)
+- [Francesco Sisini](https://github.com/francescosisini)
 
 ## Immagini del Progetto
 
