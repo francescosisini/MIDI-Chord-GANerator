@@ -66,7 +66,7 @@ Vuoi che la melodia segua la tonalità? (1 per sì, 0 per no): 1
 File MIDI generato: output.mid
 ```
 Esempio di esecuzione utilizzando il giro di accordi di "Let It Be" dei The Beatles:
-
+```plaintext
 Scegli il metro (3 per 3/4 o 4 per 4/4): 4
 Inserisci il numero di accordi nel giro armonico: 8
 Inserisci gli accordi (es. C, G, Am, F) e la loro durata in quarti:
@@ -90,7 +90,7 @@ Quante volte ripetere il giro armonico? 2
 Vuoi generare una melodia casuale? (1 per sì, 0 per no): 1
 Vuoi che la melodia segua la tonalità? (1 per sì, 0 per no): 1
 File MIDI generato: output.mid
-
+```
 
 ## Struttura del Progetto
 
