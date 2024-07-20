@@ -121,6 +121,54 @@ int main(int argc, char **argv) {
 }
 
 void write_midi_with_melody(char chords[MAX_CHORDS][MAX_LENGTH], int *durations, int num_chords, int beats_per_measure, int num_repeats, int include_bass, int include_drums, int generate_melody, int melody_follow_key, int piano_volume, int drum_volume, int bass_volume, int melody_volume, const char* filename) {
+    smf_t* smf = smf_new();
+    smf_track_t* piano_track = smf_track_new();
+    smf_add_track(smf, piano_track);
+    
+    smf_track_t* melody_track = smf_track_new();
+    smf_add_track(smf, melody_track);
+
+    double time_seconds = 0.0;
+    int scale_notes[128];
+    int num_scale_notes = 7;
+
+    for (int r = 0; r < num_repeats; r++) {
+        for (int i = 0; i < num_chords; i++) {
+            int notes[10];
+            int num_notes = chord_to_notes(chords[i], notes);
+
+            // Aggiungi note dell'accordo
+            for (int j = 0; j < num_notes; j++) {
+                smf_event_t* note_on = smf_event_new_from_bytes(0x90, notes[j], piano_volume);
+                smf_track_add_event_seconds(piano_track, note_on, time_seconds);
+                smf_event_t* note_off = smf_event_new_from_bytes(0x80, notes[j], piano_volume);
+                smf_track_add_event_seconds(piano_track, note_off, time_seconds + durations[i] * 0.25);
+            }
+
+            // Aggiungi melodia se richiesto
+            if (generate_melody) {
+                if (melody_follow_key) {
+                    get_scale_notes(chords[i], scale_notes, &num_scale_notes);
+                } else {
+                    // Usa tutte le note possibili se non si segue la tonalità
+                    for (int k = 0; k < 128; k++) {
+                        scale_notes[k] = k;
+                    }
+                    num_scale_notes = 128;
+                }
+                generate_varied_duration_melody(melody_track, num_notes, time_seconds, durations[i] * 0.25, scale_notes, num_scale_notes, melody_volume);
+            }
+
+            time_seconds += durations[i] * 0.25;
+        }
+    }
+
+    smf_save(smf, filename);
+    smf_delete(smf);
+}
+
+
+void _write_midi_with_melody(char chords[MAX_CHORDS][MAX_LENGTH], int *durations, int num_chords, int beats_per_measure, int num_repeats, int include_bass, int include_drums, int generate_melody, int melody_follow_key, int piano_volume, int drum_volume, int bass_volume, int melody_volume, const char* filename) {
     int notes[4];
     int num_notes;
     int scale_notes[7]; // Scala maggiore diatonica (7 note)
@@ -159,7 +207,11 @@ void write_midi_with_melody(char chords[MAX_CHORDS][MAX_LENGTH], int *durations,
             // Genera note casuali durante l'accordo se richiesto nella traccia melodia
             if (generate_melody) {
                 if (melody_follow_key) {
-                    generate_random_notes_with_scale(melody_track, 4, time_seconds, quarter_note_duration * durations[i], scale_notes, num_scale_notes, melody_volume);
+
+		  generate_varied_duration_melody(melody_track, 4, time_seconds, quarter_note_duration * durations[i], scale_notes, num_scale_notes, melody_volume);
+		  //generate_melody_with_rules(melody_track, 4, time_seconds, quarter_note_duration * durations[i], scale_notes, num_scale_notes, melody_volume);
+                    //generate_random_notes_with_scale(melody_track, 4, time_seconds, quarter_note_duration * durations[i], scale_notes, num_scale_notes, melody_volume);
+		    
                 } else {
                     generate_random_notes(melody_track, 4, time_seconds, quarter_note_duration * durations[i], melody_volume);
                 }
