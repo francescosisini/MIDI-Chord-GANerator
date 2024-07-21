@@ -1,5 +1,5 @@
 # Nome del file eseguibile
-TARGET = goro
+TARGET = MelodyCraft
 
 # File sorgenti
 SRC = main.c chords.c melody.c key_detection.c

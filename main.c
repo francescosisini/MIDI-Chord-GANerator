@@ -127,6 +127,12 @@ void write_midi_with_melody(char chords[MAX_CHORDS][MAX_LENGTH], int *durations,
     
     smf_track_t* melody_track = smf_track_new();
     smf_add_track(smf, melody_track);
+    
+    smf_track_t* bass_track = smf_track_new();
+    smf_add_track(smf, bass_track);
+    
+    smf_track_t* drum_track = smf_track_new();
+    smf_add_track(smf, drum_track);
 
     double time_seconds = 0.0;
     int scale_notes[128];
@@ -137,11 +143,11 @@ void write_midi_with_melody(char chords[MAX_CHORDS][MAX_LENGTH], int *durations,
             int notes[10];
             int num_notes = chord_to_notes(chords[i], notes);
 
-            // Aggiungi note dell'accordo
+            // Aggiungi note dell'accordo al piano
             for (int j = 0; j < num_notes; j++) {
-                smf_event_t* note_on = smf_event_new_from_bytes(0x90, notes[j], piano_volume);
+                smf_event_t* note_on = smf_event_new_from_bytes(0x90|0x01, notes[j], piano_volume);
                 smf_track_add_event_seconds(piano_track, note_on, time_seconds);
-                smf_event_t* note_off = smf_event_new_from_bytes(0x80, notes[j], piano_volume);
+                smf_event_t* note_off = smf_event_new_from_bytes(0x80|0x01, notes[j], piano_volume);
                 smf_track_add_event_seconds(piano_track, note_off, time_seconds + durations[i] * 0.25);
             }
 
@@ -159,114 +165,50 @@ void write_midi_with_melody(char chords[MAX_CHORDS][MAX_LENGTH], int *durations,
                 generate_varied_duration_melody(melody_track, num_notes, time_seconds, durations[i] * 0.25, scale_notes, num_scale_notes, melody_volume);
             }
 
+            // Aggiungi basso se richiesto
+            if (include_bass) {
+                int bass_note = notes[0] - 12; // Un'ottava sotto la tonica
+                smf_event_t* bass_on = smf_event_new_from_bytes(0x90|0x02, bass_note, bass_volume);
+                smf_track_add_event_seconds(bass_track, bass_on, time_seconds);
+                smf_event_t* bass_off = smf_event_new_from_bytes(0x80|0x02, bass_note, bass_volume);
+                smf_track_add_event_seconds(bass_track, bass_off, time_seconds + durations[i] * 0.25);
+            }
+
+            // Aggiungi batteria se richiesta
+            if (include_drums) {
+                // Aggiungi cassa (Kick drum)
+                int kick_drum_note = 36; // Cassa
+                smf_event_t* kick_drum_on = smf_event_new_from_bytes(0x99, kick_drum_note, drum_volume); // Canale 10 per batteria
+                smf_track_add_event_seconds(drum_track, kick_drum_on, time_seconds);
+                smf_event_t* kick_drum_off = smf_event_new_from_bytes(0x89, kick_drum_note, drum_volume); // Canale 10 per batteria
+                smf_track_add_event_seconds(drum_track, kick_drum_off, time_seconds + 0.25); // Durata 1/4
+
+                // Aggiungi rullante (Snare drum)
+                int snare_drum_note = 38; // Rullante
+                smf_event_t* snare_drum_on = smf_event_new_from_bytes(0x99, snare_drum_note, drum_volume); // Canale 10 per batteria
+                smf_track_add_event_seconds(drum_track, snare_drum_on, time_seconds + 0.5); // Aggiungi rullante a metà battuta
+                smf_event_t* snare_drum_off = smf_event_new_from_bytes(0x89, snare_drum_note, drum_volume); // Canale 10 per batteria
+                smf_track_add_event_seconds(drum_track, snare_drum_off, time_seconds + 0.75); // Durata 1/4
+
+                // Aggiungi hi-hat chiuso
+                int hi_hat_note = 42; // Hi-hat chiuso
+                for (int beat = 0; beat < beats_per_measure; beat++) {
+                    smf_event_t* hi_hat_on = smf_event_new_from_bytes(0x99, hi_hat_note, drum_volume); // Canale 10 per batteria
+                    smf_track_add_event_seconds(drum_track, hi_hat_on, time_seconds + beat * 0.25);
+                    smf_event_t* hi_hat_off = smf_event_new_from_bytes(0x89, hi_hat_note, drum_volume); // Canale 10 per batteria
+                    smf_track_add_event_seconds(drum_track, hi_hat_off, time_seconds + beat * 0.25 + 0.125); // Durata 1/8
+                }
+            }
+
             time_seconds += durations[i] * 0.25;
         }
     }
 
-    smf_save(smf, filename);
-    smf_delete(smf);
-}
-
-
-void _write_midi_with_melody(char chords[MAX_CHORDS][MAX_LENGTH], int *durations, int num_chords, int beats_per_measure, int num_repeats, int include_bass, int include_drums, int generate_melody, int melody_follow_key, int piano_volume, int drum_volume, int bass_volume, int melody_volume, const char* filename) {
-    int notes[4];
-    int num_notes;
-    int scale_notes[7]; // Scala maggiore diatonica (7 note)
-    int num_scale_notes;
-    char keys[MAX_CHORDS][MAX_LENGTH];
-
-    // Determina la tonalità per ogni accordo
-    determine_keys_for_chords(chords, num_chords, keys);
-
-    smf_t* smf = smf_new();
-    smf_track_t* piano_track = smf_track_new();
-    smf_track_t* drum_track = smf_track_new();
-    smf_track_t* bass_track = smf_track_new();
-    smf_track_t* melody_track = smf_track_new();
-    smf_add_track(smf, piano_track);
-    if (include_drums) smf_add_track(smf, drum_track);
-    if (include_bass) smf_add_track(smf, bass_track);
-    smf_add_track(smf, melody_track);
-
-    double time_seconds = 0.0;
-    double quarter_note_duration = 0.5; // durata di una nota da un quarto a 120 BPM
+    int result = smf_save(smf, filename); // Salva il file MIDI e controlla il risultato
+    if (result != 0) {
+        fprintf(stderr, "Errore nel salvataggio del file MIDI: %s\n", filename);
+    }
     
-    for (int r = 0; r < num_repeats; r++) {
-        for (int i = 0; i < num_chords; i++) {
-            num_notes = chord_to_notes(chords[i], notes);
-            
-            // Ottieni la scala della tonalità corrente
-            get_scale_notes(keys[i], scale_notes, &num_scale_notes);
-            
-            // Aggiungi eventi "Note On" per tutte le note dell'accordo nel piano
-            for (int j = 0; j < num_notes; j++) {
-                smf_event_t* event_on = smf_event_new_from_bytes(0x90, notes[j], piano_volume);
-                smf_track_add_event_seconds(piano_track, event_on, time_seconds);
-            }
-
-            // Genera note casuali durante l'accordo se richiesto nella traccia melodia
-            if (generate_melody) {
-                if (melody_follow_key) {
-
-		  generate_varied_duration_melody(melody_track, 4, time_seconds, quarter_note_duration * durations[i], scale_notes, num_scale_notes, melody_volume);
-		  //generate_melody_with_rules(melody_track, 4, time_seconds, quarter_note_duration * durations[i], scale_notes, num_scale_notes, melody_volume);
-                    //generate_random_notes_with_scale(melody_track, 4, time_seconds, quarter_note_duration * durations[i], scale_notes, num_scale_notes, melody_volume);
-		    
-                } else {
-                    generate_random_notes(melody_track, 4, time_seconds, quarter_note_duration * durations[i], melody_volume);
-                }
-            }
-
-            // Aggiungi gli eventi per la batteria in base al metro, se richiesto
-            if (include_drums) {
-                for (int k = 0; k < durations[i]; k++) {
-                    double beat_time = time_seconds + k * quarter_note_duration;
-
-                    // Aggiungi la cassa (Kick Drum) sulla prima battuta
-                    if (k % beats_per_measure == 0) {
-                        smf_event_t* kick_on = smf_event_new_from_bytes(0x99, 36, drum_volume);
-                        smf_track_add_event_seconds(drum_track, kick_on, beat_time);
-                        smf_event_t* kick_off = smf_event_new_from_bytes(0x89, 36, drum_volume);
-                        smf_track_add_event_seconds(drum_track, kick_off, beat_time + 0.1);
-                    }
-
-                    // Aggiungi il rullante (Snare Drum) in base al metro
-                    if ((beats_per_measure == 4 && (k % 4 == 1 || k % 4 == 3)) || (beats_per_measure == 3 && k % 3 == 1)) {
-                        smf_event_t* snare_on = smf_event_new_from_bytes(0x99, 38, drum_volume);
-                        smf_track_add_event_seconds(drum_track, snare_on, beat_time);
-                        smf_event_t* snare_off = smf_event_new_from_bytes(0x89, 38, drum_volume);
-                        smf_track_add_event_seconds(drum_track, snare_off, beat_time + 0.1);
-                    }
-
-                    // Aggiungi un hi-hat chiuso (Closed Hi-Hat) su ogni ottavo
-                    smf_event_t* hihat_on = smf_event_new_from_bytes(0x99, 42, drum_volume);
-                    smf_track_add_event_seconds(drum_track, hihat_on, beat_time);
-                    smf_event_t* hihat_off = smf_event_new_from_bytes(0x89, 42, drum_volume);
-                    smf_track_add_event_seconds(drum_track, hihat_off, beat_time + 0.1);
-                }
-            }
-
-            // Aggiungi una nota di basso (nota MIDI della fondamentale dell'accordo), se richiesto
-            if (include_bass) {
-                smf_event_t* bass_on = smf_event_new_from_bytes(0x90, notes[0], bass_volume);
-                smf_track_add_event_seconds(bass_track, bass_on, time_seconds);
-                smf_event_t* bass_off = smf_event_new_from_bytes(0x80, notes[0], bass_volume);
-                smf_track_add_event_seconds(bass_track, bass_off, time_seconds + quarter_note_duration * durations[i]);
-            }
-
-            // Incrementa il tempo per la durata dell'accordo
-            time_seconds += quarter_note_duration * durations[i];
-
-            // Aggiungi eventi "Note Off" per tutte le note dell'accordo nel piano
-            for (int j = 0; j < num_notes; j++) {
-                smf_event_t* event_off = smf_event_new_from_bytes(0x80, notes[j], piano_volume);
-                smf_track_add_event_seconds(piano_track, event_off, time_seconds);
-            }
-        }
-    }
-
-    if (smf_save(smf, filename) != 0) {
-        fprintf(stderr, "Errore durante il salvataggio del file MIDI: %s\n", filename);
-    }
     smf_delete(smf);
 }
+
