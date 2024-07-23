@@ -23,6 +23,24 @@ double SEMIBREVE;            // Semibreve (intera)
 void write_midi_with_melody(char chords[MAX_CHORDS][MAX_LENGTH], int *durations, int num_chords, int beats_per_measure, int num_repeats, int include_bass, int include_drums, int generate_melody, int melody_follow_key, int piano_volume, int drum_volume, int bass_volume, int melody_volume, const char* filename);
 void get_scale_notes(const char* key, int* scale_notes, int* num_notes);
 
+void print_help() {
+    printf("Usage: melody_generator [options] chord1 duration1 chord2 duration2 ...\n");
+    printf("Options:\n");
+    printf("  -t BPM            Set the BPM (default: 90)\n");
+    printf("  -m meter          Set the meter (3 or 4, default: 4)\n");
+    printf("  -r repeats        Set the number of repeats (default: 1)\n");
+    printf("  -b                Include bass\n");
+    printf("  -d                Include drums\n");
+    printf("  -g                Generate melody\n");
+    printf("  -k                Follow key for melody\n");
+    printf("  -p piano_volume   Set the piano volume (0-127, default: 100)\n");
+    printf("  -v drum_volume    Set the drum volume (0-127, default: 100)\n");
+    printf("  -q bass_volume    Set the bass volume (0-127, default: 100)\n");
+    printf("  -w melody_volume  Set the melody volume (0-127, default: 100)\n");
+    printf("  -o filename       Set the output filename (default: output.mid)\n");
+    printf("  -h                Show this help message\n");
+}
+
 int main(int argc, char **argv) {
   int BPM = 90;
   int beats_per_measure = 4;
@@ -41,7 +59,7 @@ int main(int argc, char **argv) {
     char output_filename[100] = "output.mid";
 
     int opt;
-    while ((opt = getopt(argc, argv, "t:m:r:bdgkp:v:q:w:o:")) != -1) {
+    while ((opt = getopt(argc, argv, "t:m:r:bdgkp:v:q:w:o:h")) != -1) {
         switch (opt) {
             case 'm':
                 beats_per_measure = atoi(optarg);
@@ -102,8 +120,11 @@ int main(int argc, char **argv) {
             case 'o':
                 strcpy(output_filename, optarg);
                 break;
+	     case 'h':
+                print_help();
+                exit(EXIT_SUCCESS);
             default:
-                fprintf(stderr, "Usage: %s [-m meter] [-r repeats] [-b] [-d] [-g] [-k] [-p piano_volume] [-v drum_volume] [-q bass_volume] [-w melody_volume] [-o output_filename] chord1 duration1 chord2 duration2 ...\n", argv[0]);
+                print_help();
                 exit(EXIT_FAILURE);
         }
     }
