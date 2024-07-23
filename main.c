@@ -11,11 +11,21 @@
 #define MAX_CHORDS 100
 #define MAX_LENGTH 10
 
+// Globals
+double SEMIMINIMA;           // Semiminima (1/4)
+double MINIMA;               // Minima (1/2)
+double CROMA;                // Croma (1/8)
+double SEMICROMA;            // Semicroma (1/16)
+double SEMIBREVE;            // Semibreve (intera)
+
+
+
 void write_midi_with_melody(char chords[MAX_CHORDS][MAX_LENGTH], int *durations, int num_chords, int beats_per_measure, int num_repeats, int include_bass, int include_drums, int generate_melody, int melody_follow_key, int piano_volume, int drum_volume, int bass_volume, int melody_volume, const char* filename);
 void get_scale_notes(const char* key, int* scale_notes, int* num_notes);
 
 int main(int argc, char **argv) {
-    int beats_per_measure = 4;
+  int BPM = 90;
+  int beats_per_measure = 4;
     int num_repeats = 1;
     int include_bass = 0;
     int include_drums = 0;
@@ -31,7 +41,7 @@ int main(int argc, char **argv) {
     char output_filename[100] = "output.mid";
 
     int opt;
-    while ((opt = getopt(argc, argv, "m:r:bdgkp:v:q:w:o:")) != -1) {
+    while ((opt = getopt(argc, argv, "t:m:r:bdgkp:v:q:w:o:")) != -1) {
         switch (opt) {
             case 'm':
                 beats_per_measure = atoi(optarg);
@@ -76,6 +86,12 @@ int main(int argc, char **argv) {
                     bass_volume = 100;
                 }
                 break;
+	   case 't':
+                BPM = atoi(optarg);
+                if (BPM < 1 || BPM > 200) {
+                    fprintf(stderr, "Invalid BPM. Must be between 1 and 200. Defaulting to 90.\n");
+                }
+                break;
             case 'w':
                 melody_volume = atoi(optarg);
                 if (melody_volume < 0 || melody_volume > 127) {
@@ -92,6 +108,15 @@ int main(int argc, char **argv) {
         }
     }
 
+    // Eval notes duration
+    // Durate delle note in secondi, basate sui BPM definiti
+    SEMIMINIMA = 60.0 / BPM;           // Semiminima (1/4)
+    MINIMA = 2 * SEMIMINIMA;           // Minima (1/2)
+    CROMA = SEMIMINIMA / 2;            // Croma (1/8)
+    SEMICROMA = SEMIMINIMA / 4;        // Semicroma (1/16)
+    SEMIBREVE = 4 * SEMIMINIMA;        // Semibreve (intera)
+
+    
     // Parse chords and durations
     int remaining_args = argc - optind;
     if (remaining_args % 2 != 0) {
@@ -148,7 +173,7 @@ void write_midi_with_melody(char chords[MAX_CHORDS][MAX_LENGTH], int *durations,
                 smf_event_t* note_on = smf_event_new_from_bytes(0x90|0x01, notes[j], piano_volume);
                 smf_track_add_event_seconds(piano_track, note_on, time_seconds);
                 smf_event_t* note_off = smf_event_new_from_bytes(0x80|0x01, notes[j], piano_volume);
-                smf_track_add_event_seconds(piano_track, note_off, time_seconds + durations[i] * 0.25);
+                smf_track_add_event_seconds(piano_track, note_off, time_seconds + durations[i] * SEMIMINIMA);
             }
 
             // Aggiungi melodia se richiesto
@@ -162,7 +187,7 @@ void write_midi_with_melody(char chords[MAX_CHORDS][MAX_LENGTH], int *durations,
                     }
                     num_scale_notes = 128;
                 }
-                generate_varied_duration_melody(melody_track, num_notes, time_seconds, durations[i] * 0.25, scale_notes, num_scale_notes, melody_volume);
+                generate_varied_duration_melody(melody_track, num_notes, time_seconds, durations[i] * SEMIMINIMA, scale_notes, num_scale_notes, melody_volume);
             }
 
             // Aggiungi basso se richiesto
@@ -171,7 +196,7 @@ void write_midi_with_melody(char chords[MAX_CHORDS][MAX_LENGTH], int *durations,
                 smf_event_t* bass_on = smf_event_new_from_bytes(0x90|0x02, bass_note, bass_volume);
                 smf_track_add_event_seconds(bass_track, bass_on, time_seconds);
                 smf_event_t* bass_off = smf_event_new_from_bytes(0x80|0x02, bass_note, bass_volume);
-                smf_track_add_event_seconds(bass_track, bass_off, time_seconds + durations[i] * 0.25);
+                smf_track_add_event_seconds(bass_track, bass_off, time_seconds + durations[i] * SEMIMINIMA);
             }
 
             // Aggiungi batteria se richiesta
@@ -181,26 +206,26 @@ void write_midi_with_melody(char chords[MAX_CHORDS][MAX_LENGTH], int *durations,
                 smf_event_t* kick_drum_on = smf_event_new_from_bytes(0x99, kick_drum_note, drum_volume); // Canale 10 per batteria
                 smf_track_add_event_seconds(drum_track, kick_drum_on, time_seconds);
                 smf_event_t* kick_drum_off = smf_event_new_from_bytes(0x89, kick_drum_note, drum_volume); // Canale 10 per batteria
-                smf_track_add_event_seconds(drum_track, kick_drum_off, time_seconds + 0.25); // Durata 1/4
+                smf_track_add_event_seconds(drum_track, kick_drum_off, time_seconds + SEMIMINIMA); // Durata 1/4
 
                 // Aggiungi rullante (Snare drum)
                 int snare_drum_note = 38; // Rullante
                 smf_event_t* snare_drum_on = smf_event_new_from_bytes(0x99, snare_drum_note, drum_volume); // Canale 10 per batteria
-                smf_track_add_event_seconds(drum_track, snare_drum_on, time_seconds + 0.5); // Aggiungi rullante a metà battuta
+                smf_track_add_event_seconds(drum_track, snare_drum_on, time_seconds + MINIMA); // Aggiungi rullante a metà battuta
                 smf_event_t* snare_drum_off = smf_event_new_from_bytes(0x89, snare_drum_note, drum_volume); // Canale 10 per batteria
-                smf_track_add_event_seconds(drum_track, snare_drum_off, time_seconds + 0.75); // Durata 1/4
+                smf_track_add_event_seconds(drum_track, snare_drum_off, time_seconds + MINIMA+SEMIMINIMA); // Durata 1/4
 
                 // Aggiungi hi-hat chiuso
                 int hi_hat_note = 42; // Hi-hat chiuso
                 for (int beat = 0; beat < beats_per_measure; beat++) {
                     smf_event_t* hi_hat_on = smf_event_new_from_bytes(0x99, hi_hat_note, drum_volume); // Canale 10 per batteria
-                    smf_track_add_event_seconds(drum_track, hi_hat_on, time_seconds + beat * 0.25);
+                    smf_track_add_event_seconds(drum_track, hi_hat_on, time_seconds + beat * SEMIMINIMA);
                     smf_event_t* hi_hat_off = smf_event_new_from_bytes(0x89, hi_hat_note, drum_volume); // Canale 10 per batteria
-                    smf_track_add_event_seconds(drum_track, hi_hat_off, time_seconds + beat * 0.25 + 0.125); // Durata 1/8
+                    smf_track_add_event_seconds(drum_track, hi_hat_off, time_seconds + beat * SEMIMINIMA + CROMA); // Durata 1/8
                 }
             }
 
-            time_seconds += durations[i] * 0.25;
+            time_seconds += durations[i] * SEMIMINIMA;
         }
     }
 
