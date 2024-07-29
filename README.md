@@ -1,93 +1,81 @@
+# MelodyCraft
 
-# MIDI Chord GANerator
+MelodyCraft is a tool for generating MIDI files with chord progressions, bass lines, drum patterns, and melodies. Users can specify different sections of a song (e.g., intro, verse, chorus) and define the song structure by arranging these sections.
 
-MIDI Chord GANerator è un programma che genera sequenze MIDI basate su progressioni di accordi fornite dall'utente. Il programma può generare melodie casuali che seguono o meno la tonalità determinata dalla progressione degli accordi, e aggiunge una linea di basso e una batteria che tengono conto del metro scelto (3/4 o 4/4).
+## Features
 
-## Funzionalità
+- Generate chord progressions
+- Add bass lines
+- Add drum patterns
+- Generate melodies that follow the key
+- Define song sections and structure
 
-- Inserimento di progressioni di accordi e durate.
-- Ripetizione della progressione degli accordi.
-- Generazione di melodie casuali.
-- Melodie che seguono la tonalità determinata dalla progressione degli accordi.
-- Aggiunta di linea di basso basata sulla nota fondamentale degli accordi.
-- Aggiunta di batteria con cassa, rullante e hi-hat.
-- Supporto per i metri 3/4 e 4/4.
-- Salvataggio del file MIDI generato.
+## Installation
 
-## Dipendenze
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/francescosisini/MIDI-Chord-GANerator.git
+    cd MIDI-Chord-GANerator
+    ```
 
-- [libsmf](https://sourceforge.net/projects/libsmf/)
-- [glib-2.0](https://developer.gnome.org/glib/)
+2. Install dependencies:
+    ```bash
+    sudo apt-get install libsmf-dev libglib2.0-dev
+    ```
 
-## Installazione
+3. Compile the project:
+    ```bash
+    make
+    ```
 
-1. Clona il repository:
-   ```sh
-   git clone https://github.com/tuo-username/midi-chord-ganerator.git
-   cd midi-chord-ganerator
-   ```
+## Usage
 
-2. Esegui lo script di setup per installare le dipendenze:
-   ```sh
-   ./setup.sh
-   ```
+Run the MelodyCraft executable with the desired options:
 
-3. Compila il progetto:
-   ```sh
-   make
-   ```
+```bash
+./MelodyCraft [options] [section] chord duration ... [section] chord duration ... [structure] section repeat ...
 
-## Utilizzo
+Options
 
-Esegui il programma con:
-```sh
-make run
-```
+    -t BPM Set the BPM (default: 90)
+    -m meter Set the meter (3 or 4, default: 4)
+    -r repeats Set the number of repeats for the whole song (default: 1)
+    -b Include bass
+    -d Include drums
+    -g Generate melody
+    -k Follow key for melody
+    -p piano_volume Set the piano volume (0-127, default: 100)
+    -v drum_volume Set the drum volume (0-127, default: 100)
+    -q bass_volume Set the bass volume (0-127, default: 100)
+    -w melody_volume Set the melody volume (0-127, default: 100)
+    -o filename Set the output filename (default: output.mid)
+    -h Show the help message
 
-./goro -m 4 -r 2 -b -d -g -k -p 90 -v 100 -q 80 -w 110 -o test_NK.mid C 4 G 4 Am 4 F 4 C 4 G 4 F 4 C 4
-Opzioni disponibili:
+./MelodyCraft -t 120 -m 4 -b -d -g -k -p 100 -v 100 -q 100 -w 100 -o my_song.mid [INTRO] C 4 G 4 [VERSO] Am 4 Em 4 [RITORNELLO] C 4 A 4 F 4 G 4 [CANZONE] INTRO 1 VERSO 2 RITORNELLO 1 VERSO 1 RITORNELLO 2
 
-    -m: Imposta il metro (3 per 3/4, 4 per 4/4)
-    -r: Numero di ripetizioni del giro armonico
-    -b: Includi la linea di basso
-    -d: Includi la batteria
-    -g: Genera una melodia casuale
-    -k: La melodia casuale segue la tonalità
-    -p: Volume della traccia del piano (0-127)
-    -v: Volume della traccia della batteria (0-127)
-    -q: Volume della traccia del basso (0-127)
-    -w: Volume della traccia della melodia (0-127)
-    -o: Nome del file di output
+In this example:
 
-    Dopo le opzioni, inserire una sequenza di accordi seguiti dalla durata in quarti.
+    The BPM is set to 120.
+    The meter is 4/4.
+    Bass, drums, and melody generation are included.
+    The melody follows the key.
+    Volumes for piano, drums, bass, and melody are set to 100.
+    The output file is named my_song.mid.
 
-    Esempio:
-    ./goro -m 4 -r 2 -b -d -g -k -p 90 -v 100 -q 80 -w 110 -o let_it_be.mid C 4 G 4 Am 4 F 4 C 4 G 4 F 4 C 4
+The sections defined are:
 
-```
+    INTRO with chords C and G, each lasting 4 beats.
+    VERSO with chords Am and Em, each lasting 4 beats.
+    RITORNELLO with chords C, A, F, and G, each lasting 4 beats.
 
+The song structure is:
 
-## Struttura del Progetto
+    INTRO repeated once.
+    VERSO repeated twice.
+    RITORNELLO repeated once.
+    VERSO repeated once.
+    RITORNELLO repeated twice.
 
-- `main.c`: Contiene il flusso principale del programma.
-- `chords.c` e `chords.h`: Funzioni per la gestione degli accordi.
-- `melody.c` e `melody.h`: Funzioni per la generazione delle melodie.
-- `key_detection.c` e `key_detection.h`: Funzioni per la determinazione della tonalità.
-- `setup.sh`: Script per l'installazione delle dipendenze.
-- `Makefile`: File per la compilazione del progetto.
+Contributions
 
-## Contribuire
-
-Se desideri contribuire a questo progetto, sentiti libero di fare una fork del repository e inviare una pull request con le tue modifiche.
-
-## Licenza
-
-Questo progetto è concesso in licenza sotto la licenza MIT. Vedi il file [LICENSE](LICENSE) per ulteriori dettagli.
-
-## Autori
-
-- [Francesco Sisini](https://github.com/francescosisini)
-
-## Immagini del Progetto
-
-![MIDI Chord GANerator](path/to/your/project/image.png)
+Contributions are welcome! Please fork the repository and submit a pull request.
