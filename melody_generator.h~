@@ -1,0 +1,27 @@
+// melody_generator.h
+#ifndef MELODY_GENERATOR_H
+#define MELODY_GENERATOR_H
+
+#define MAX_SECTIONS 10
+#define MAX_CHORDS 100
+#define MAX_LENGTH 10
+
+typedef struct {
+    int notes[MAX_CHORDS][MAX_LENGTH];      // Note della melodia
+    int durations[MAX_CHORDS][MAX_LENGTH];  // Durate delle note
+    int num_notes[MAX_CHORDS];              // Numero di note per sezione
+} MelodyResult;
+
+void compose_melody(
+    char sections[MAX_SECTIONS][MAX_LENGTH],
+    int section_repeats[MAX_SECTIONS],
+    char section_chords[MAX_SECTIONS][MAX_CHORDS][MAX_LENGTH],
+    int section_durations[MAX_SECTIONS][MAX_CHORDS],
+    int song_structure[MAX_CHORDS][2],
+    int song_structure_length,
+    int beats_per_measure,
+    int instrument,
+    MelodyResult* result
+);
+
+#endif // MELODY_GENERATOR_H

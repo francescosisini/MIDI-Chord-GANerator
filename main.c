@@ -8,6 +8,7 @@
 #include "chords.h"
 #include "melody.h"
 #include "key_detection.h"
+#include "melody_generator.h"
 
 #define MAX_CHORDS 100
 #define MAX_SECTIONS 10
@@ -47,7 +48,7 @@ SectionType get_section_type(const char* name) {
 }
 
 
-void write_midi_with_melody(char sections[MAX_SECTIONS][MAX_LENGTH], int section_repeats[MAX_SECTIONS], char section_chords[MAX_SECTIONS][MAX_CHORDS][MAX_LENGTH], int section_durations[MAX_SECTIONS][MAX_CHORDS], int song_structure[MAX_CHORDS][2], int song_structure_length, int beats_per_measure, int include_bass, int include_drums, int generate_melody, int melody_follow_key, int piano_volume, int drum_volume, int bass_volume, int melody_volume, const char* filename);
+void write_midi_with_melody(char sections[MAX_SECTIONS][MAX_LENGTH], int section_repeats[MAX_SECTIONS], char section_chords[MAX_SECTIONS][MAX_CHORDS][MAX_LENGTH], int section_durations[MAX_SECTIONS][MAX_CHORDS], int song_structure[MAX_CHORDS][2], int song_structure_length, int beats_per_measure, int include_bass, int include_drums, int generate_melody, int melody_follow_key, int piano_volume, int drum_volume, int bass_volume, int melody_volume, const char* filename,MelodyResult* melody_result);
 void get_scale_notes(const char* key, int* scale_notes, int* num_notes);
 
 void print_help() {
@@ -230,13 +231,136 @@ int main(int argc, char **argv) {
         printf("  Section %d, repeats %d\n", song_structure[i][0], song_structure[i][1]);
     }
 
-    write_midi_with_melody(sections, section_repeats, section_chords, section_durations, song_structure, song_structure_length, beats_per_measure, include_bass, include_drums, generate_melody, melody_follow_key, piano_volume, drum_volume, bass_volume, melody_volume, output_filename);
+    MelodyResult melody_result;
+    compose_melody(sections, section_repeats, section_chords, section_durations, song_structure, song_structure_length, beats_per_measure, 0, 0,BPM, &melody_result);
 
+
+    //write_midi_with_melody(sections, section_repeats, section_chords, section_durations, song_structure, song_structure_length, beats_per_measure, include_bass, include_drums, generate_melody, melody_follow_key, piano_volume, drum_volume, bass_volume, melody_volume, output_filename);
+
+    // Scrivi il file MIDI con la melodia
+    write_midi_with_melody(sections, section_repeats, section_chords, section_durations, song_structure, song_structure_length, beats_per_measure, include_bass, include_drums, generate_melody, melody_follow_key, piano_volume, drum_volume, bass_volume, melody_volume, output_filename, &melody_result);
+
+    
     printf("File MIDI generato: %s\n", output_filename);
     return 0;
 }
+void write_midi_with_melody(
+    char sections[MAX_SECTIONS][MAX_LENGTH], 
+    int section_repeats[MAX_SECTIONS], 
+    char section_chords[MAX_SECTIONS][MAX_CHORDS][MAX_LENGTH], 
+    int section_durations[MAX_SECTIONS][MAX_CHORDS], 
+    int song_structure[MAX_CHORDS][2], 
+    int song_structure_length, 
+    int beats_per_measure, 
+    int include_bass, 
+    int include_drums, 
+    int generate_melody, 
+    int melody_follow_key, 
+    int piano_volume, 
+    int drum_volume, 
+    int bass_volume, 
+    int melody_volume, 
+    const char* filename,
+    MelodyResult* melody_result
+) {
+    smf_t* smf = smf_new();
+    smf_track_t* piano_track = smf_track_new();
+    smf_add_track(smf, piano_track);
 
-void write_midi_with_melody(char sections[MAX_SECTIONS][MAX_LENGTH], int section_repeats[MAX_SECTIONS], char section_chords[MAX_SECTIONS][MAX_CHORDS][MAX_LENGTH], int section_durations[MAX_SECTIONS][MAX_CHORDS], int song_structure[MAX_CHORDS][2], int song_structure_length, int beats_per_measure, int include_bass, int include_drums, int generate_melody, int melody_follow_key, int piano_volume, int drum_volume, int bass_volume, int melody_volume, const char* filename) {
+    smf_track_t* melody_track = smf_track_new();
+    smf_add_track(smf, melody_track);
+
+    smf_track_t* bass_track = smf_track_new();
+    smf_add_track(smf, bass_track);
+
+    smf_track_t* drum_track = smf_track_new();
+    smf_add_track(smf, drum_track);
+
+    double time_seconds = 0.0;
+    int scale_notes[128];
+    int num_scale_notes = 7;
+
+    for (int r = 0; r < song_structure_length; r++) {
+        int section_index = song_structure[r][0];
+        int repeat = song_structure[r][1];
+
+        for (int j = 0; j < repeat; j++) {
+            for (int i = 0; i < MAX_CHORDS && section_chords[section_index][i][0] != 0; i++) {
+                int notes[10];
+                int num_notes = chord_to_notes(section_chords[section_index][i], notes);
+
+                // Aggiungi note dell'accordo al piano
+                for (int k = 0; k < num_notes; k++) {
+                    smf_event_t* note_on = smf_event_new_from_bytes(0x90 | 0x00, notes[k], piano_volume);
+                    smf_track_add_event_seconds(piano_track, note_on, time_seconds);
+                    smf_event_t* note_off = smf_event_new_from_bytes(0x80 | 0x00, notes[k], piano_volume);
+                    smf_track_add_event_seconds(piano_track, note_off, time_seconds + section_durations[section_index][i] * SEMIMINIMA);
+                }
+
+                // Aggiungi melodia generata
+                if (generate_melody) {
+                    int melody_length = melody_result->melody_lengths[section_index];
+                    for (int m = 0; m < melody_length; m++) {
+                        smf_event_t* note_on = smf_event_new_from_bytes(0x90 | 0x01, melody_result->melody_notes[section_index][m], melody_volume);
+                        smf_track_add_event_seconds(melody_track, note_on, time_seconds);
+                        smf_event_t* note_off = smf_event_new_from_bytes(0x80 | 0x01, melody_result->melody_notes[section_index][m], melody_volume);
+                        smf_track_add_event_seconds(melody_track, note_off, time_seconds + melody_result->melody_durations[section_index][m]);
+                        time_seconds += melody_result->melody_durations[section_index][m];
+                    }
+                }
+
+                // Aggiungi basso se richiesto
+                if (include_bass) {
+                    int bass_note = notes[0] - 12;
+                    smf_event_t* bass_on = smf_event_new_from_bytes(0x90 | 0x02, bass_note, bass_volume);
+                    smf_track_add_event_seconds(bass_track, bass_on, time_seconds);
+                    smf_event_t* bass_off = smf_event_new_from_bytes(0x80 | 0x02, bass_note, bass_volume);
+                    smf_track_add_event_seconds(bass_track, bass_off, time_seconds + section_durations[section_index][i] * SEMIMINIMA);
+                }
+
+                // Aggiungi batteria se richiesta
+                if (include_drums) {
+                    int kick_drum_note = 36;
+                    smf_event_t* kick_drum_on = smf_event_new_from_bytes(0x99, kick_drum_note, drum_volume);
+                    smf_track_add_event_seconds(drum_track, kick_drum_on, time_seconds);
+                    smf_event_t* kick_drum_off = smf_event_new_from_bytes(0x89, kick_drum_note, drum_volume);
+                    smf_track_add_event_seconds(drum_track, kick_drum_off, time_seconds + SEMIMINIMA);
+
+                    int snare_drum_note = 38;
+                    smf_event_t* snare_drum_on = smf_event_new_from_bytes(0x99, snare_drum_note, drum_volume);
+                    smf_track_add_event_seconds(drum_track, snare_drum_on, time_seconds + MINIMA);
+                    smf_event_t* snare_drum_off = smf_event_new_from_bytes(0x89, snare_drum_note, drum_volume);
+                    smf_track_add_event_seconds(drum_track, snare_drum_off, time_seconds + MINIMA + SEMIMINIMA);
+
+                    int hi_hat_note = 42;
+                    for (int beat = 0; beat < beats_per_measure; beat++) {
+                        smf_event_t* hi_hat_on = smf_event_new_from_bytes(0x99, hi_hat_note, drum_volume);
+                        smf_track_add_event_seconds(drum_track, hi_hat_on, time_seconds + beat * SEMIMINIMA);
+                        smf_event_t* hi_hat_off = smf_event_new_from_bytes(0x89, hi_hat_note, drum_volume);
+                        smf_track_add_event_seconds(drum_track, hi_hat_off, time_seconds + beat * SEMIMINIMA + CROMA);
+                    }
+                }
+
+                time_seconds += section_durations[section_index][i] * SEMIMINIMA;
+                if (time_seconds < 0) {
+                    fprintf(stderr, "Invalid time_seconds calculated: %f\n", time_seconds);
+                    exit(EXIT_FAILURE);
+                }
+            }
+        }
+    }
+
+    int result = smf_save(smf, filename);
+    if (result != 0) {
+        fprintf(stderr, "Errore nel salvataggio del file MIDI: %s\n", filename);
+    }
+
+    smf_delete(smf);
+}
+
+
+
+void _write_midi_with_melody(char sections[MAX_SECTIONS][MAX_LENGTH], int section_repeats[MAX_SECTIONS], char section_chords[MAX_SECTIONS][MAX_CHORDS][MAX_LENGTH], int section_durations[MAX_SECTIONS][MAX_CHORDS], int song_structure[MAX_CHORDS][2], int song_structure_length, int beats_per_measure, int include_bass, int include_drums, int generate_melody, int melody_follow_key, int piano_volume, int drum_volume, int bass_volume, int melody_volume, const char* filename) {
     smf_t* smf = smf_new();
     smf_track_t* piano_track = smf_track_new();
     smf_add_track(smf, piano_track);

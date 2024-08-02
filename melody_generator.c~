@@ -1,0 +1,49 @@
+// melody_generator.c
+#include "melody_generator.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+void compose_melody(
+    char sections[MAX_SECTIONS][MAX_LENGTH],
+    int section_repeats[MAX_SECTIONS],
+    char section_chords[MAX_SECTIONS][MAX_CHORDS][MAX_LENGTH],
+    int section_durations[MAX_SECTIONS][MAX_CHORDS],
+    int song_structure[MAX_CHORDS][2],
+    int song_structure_length,
+    int beats_per_measure,
+    int instrument,
+    MelodyResult* result
+) {
+    double SEMIMINIMA = 60.0 / 120;  // Semiminima (1/4)
+    double MINIMA = 2 * SEMIMINIMA;  // Minima (1/2)
+    double CROMA = SEMIMINIMA / 2;   // Croma (1/8)
+    double SEMICROMA = SEMIMINIMA / 4; // Semicroma (1/16)
+    double SEMIBREVE = 4 * SEMIMINIMA; // Semibreve (intera)
+
+    // Inizializza la struttura result
+    memset(result, 0, sizeof(MelodyResult));
+
+    // Loop through song structure
+    for (int i = 0; i < song_structure_length; i++) {
+        int section_idx = song_structure[i][0];
+        int repeats = song_structure[i][1];
+
+        for (int r = 0; r < repeats; r++) {
+            for (int j = 0; j < MAX_CHORDS && section_chords[section_idx][j][0] != 0; j++) {
+                const char* chord = section_chords[section_idx][j];
+                int duration = section_durations[section_idx][j];
+
+                // Genera la melodia basata su chord, duration, instrument
+                // Questa parte può essere implementata con una logica più complessa
+
+                // Esempio di generazione di note casuali per la melodia
+                int note = rand() % 128;  // Nota casuale tra 0 e 127
+                result->notes[section_idx][result->num_notes[section_idx]] = note;
+                result->durations[section_idx][result->num_notes[section_idx]] = duration;
+                result->num_notes[section_idx]++;
+            }
+        }
+    }
+}
