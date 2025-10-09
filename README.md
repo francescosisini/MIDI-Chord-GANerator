@@ -54,7 +54,6 @@ Options
 
 ### Example
 
-```bash
 ./MelodyCraft \
   -t 120 -m 4 -b -d -g -k \
   -p 100 -v 100 -q 100 -w 100 \
