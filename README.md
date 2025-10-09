@@ -91,7 +91,7 @@ Intro ×1 → Verse_A ×2 → Chorus ×1 → Verse_A ×1 → Chorus ×2
 
 💡 Section names are free-form. Use any label inside brackets: [Intro], [Verse_A], [Bridge2], etc.
 
-Chord format (quick ref.)
+**Chord format (quick ref.)
 
 Roots: C C# D D# E F F# G G# A A# B (anche bemolli: Db Eb Gb Ab Bb)
 
@@ -101,8 +101,8 @@ sus2 = {root, 2nd, 5th}, sus4 = {root, 4th, 5th}
 
 add9 = major triad + 9th, madd9 = minor triad + 9th
 
-Omettere il suffisso ⇒ triade maggiore (es. C)
+Without suffix ⇒ triade maggiore (es. C)
 
-Contributions
+**Contributions
 
 Contributions are welcome! Please fork the repository and submit a pull request.
