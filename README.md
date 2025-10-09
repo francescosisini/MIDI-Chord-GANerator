@@ -51,7 +51,7 @@ Options
     -o filename Set the output filename (default: output.mid)
     -h Show the help message
 
-
+```
 ### Example
 
 ./MelodyCraft \
