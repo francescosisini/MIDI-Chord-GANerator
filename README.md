@@ -1,6 +1,6 @@
 # MelodyCraft
 
-MelodyCraft is a tool for generating MIDI files with chord progressions, bass lines, drum patterns, and melodies. Users can specify different sections of a song (e.g., intro, verse, chorus) and define the song structure by arranging these sections.
+MelodyCraft is a tool for generating [MIDI](MIDI.md) files with chord progressions, bass lines, drum patterns, and melodies. Users can specify different sections of a song (e.g., intro, verse, chorus) and define the song structure by arranging these sections.
 
 ## Features
 
