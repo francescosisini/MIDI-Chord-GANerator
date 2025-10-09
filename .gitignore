@@ -1,0 +1,144 @@
+# ----------------------------
+# OS / Desktop junk
+# ----------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.Trash-*
+.directory
+
+# ----------------------------
+# Editor & IDE
+# ----------------------------
+# Emacs/Vim/Nano/JetBrains/VSCode ecc.
+*~
+*.*~
+\#*\#
+.\#*
+*.swp
+*.swo
+*.tmp
+*.bak
+*.orig
+.idea/
+.vscode/
+.history/
+.spyproject/
+
+# ----------------------------
+# Python
+# ----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual env
+.venv/
+venv/
+env/
+ENV/
+.conda/
+.python-version
+
+# Build / packaging
+build/
+dist/
+pip-wheel-metadata/
+*.egg-info/
+.eggs/
+*.egg
+*.manifest
+*.spec
+
+# Test / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache/
+pytest_cache/
+.pytest_cache/
+.pyre/
+.mypy_cache/
+
+# Notebooks
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+
+# Logs / runtime
+*.log
+logs/
+*.pid
+*.lock
+
+# ----------------------------
+# Audio / Music assets (pesanti)
+# ----------------------------
+# Se non vuoi versionare render e risorse audio, lasciali ignorati.
+*.wav
+*.aiff
+*.aif
+*.flac
+*.mp3
+*.ogg
+*.m4a
+
+# Soundfonts / librerie
+*.sf2
+*.sfz
+*.gig
+*.dls
+*.sfArk
+
+# DAW/Project caches comuni (aggiungi se le usi)
+*.als
+*.logicx
+*.cwp
+*.band
+*.rpp
+*.aup
+*.aup3
+*.flp
+*.als~
+*.rpp-bak
+
+# ----------------------------
+# MIDI (OPZIONALE)
+# ----------------------------
+# Di default NON ignoriamo i .mid perché spesso sono output utili.
+# Se vuoi ignorare i MIDI generati automaticamente, scommenta:
+# *.mid
+# *.midi
+
+# In alternativa, ignora solo una cartella di render:
+# renders/
+# outputs/
+# generated/
+# artifacts/
+
+# ----------------------------
+# Dati & modelli (se presenti)
+# ----------------------------
+data/
+datasets/
+checkpoints/
+models/
+*.pt
+*.pth
+*.onnx
+*.h5
+*.ckpt
+
+# ----------------------------
+# Altri
+# ----------------------------
+*.csv~
+*.tsv~
+*.json~
+*.yaml~
+*.yml~
