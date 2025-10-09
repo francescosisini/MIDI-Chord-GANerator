@@ -1,7 +1,96 @@
 #include "chords.h"
 #include <string.h>
+#include <ctype.h>
+#include <stdio.h>
+
+// Base MIDI per le radici nell'ottava usata dal tuo codice: C4..B4 = 60..71
+static const int ROOT_BASE_MIDI[12] = {
+/* C  C#  D  D#  E  F  F#  G  G#  A  A#  B */
+   60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71
+};
+
+// mappa nome->index (C=0, C#/Db=1, ... B=11)
+static int root_index_from_name(const char* s, int* out_idx, int* root_len) {
+    // atteso: Lettera A-G, opzionale # o b
+    if (!s || !s[0]) return 0;
+    char L = toupper((unsigned char)s[0]);
+    int idx = -1;
+    switch (L) {
+        case 'C': idx = 0; break;
+        case 'D': idx = 2; break;
+        case 'E': idx = 4; break;
+        case 'F': idx = 5; break;
+        case 'G': idx = 7; break;
+        case 'A': idx = 9; break;
+        case 'B': idx = 11; break;
+        default: return 0;
+    }
+    int len = 1;
+    if (s[1] == '#' || s[1] == 'b' || s[1] == 'B') {
+        if (s[1] == '#') idx = (idx + 1) % 12;
+        else             idx = (idx + 11) % 12; // bemolle = -1
+        len = 2;
+    }
+    *out_idx = idx;
+    *root_len = len;
+    return 1;
+}
+
+// Riempi 'out' con gli offset del suffisso; ritorna numero di note, -1 se non supportato
+static int chord_intervals_from_suffix(const char* suf, int* out) {
+    // normalizza: se NULL => ""
+    if (!suf) suf = "";
+
+    // match dal più lungo al più corto (evita ambiguità tipo "sus4" vs "sus")
+    if (strcasecmp(suf, "maj7") == 0) { int t[] = {0,4,7,11}; memcpy(out,t,sizeof(t)); return 4; }
+    if (strcasecmp(suf, "madd9") == 0){ int t[] = {0,3,7,14}; memcpy(out,t,sizeof(t)); return 4; }
+    if (strcasecmp(suf, "add9") == 0) { int t[] = {0,4,7,14}; memcpy(out,t,sizeof(t)); return 4; }
+    if (strcasecmp(suf, "sus2") == 0) { int t[] = {0,2,7};    memcpy(out,t,sizeof(t)); return 3; }
+    if (strcasecmp(suf, "sus4") == 0) { int t[] = {0,5,7};    memcpy(out,t,sizeof(t)); return 3; }
+
+    // settime/min6/aug/dim/triadi standard
+    if (strcasecmp(suf, "m7") == 0)   { int t[] = {0,3,7,10}; memcpy(out,t,sizeof(t)); return 4; }
+    if (strcasecmp(suf, "7") == 0)    { int t[] = {0,4,7,10}; memcpy(out,t,sizeof(t)); return 4; }
+    if (strcasecmp(suf, "m6") == 0)   { int t[] = {0,3,7,9};  memcpy(out,t,sizeof(t)); return 4; }
+    if (strcasecmp(suf, "6") == 0)    { int t[] = {0,4,7,9};  memcpy(out,t,sizeof(t)); return 4; }
+    if (strcasecmp(suf, "aug") == 0)  { int t[] = {0,4,8};    memcpy(out,t,sizeof(t)); return 3; }
+    if (strcasecmp(suf, "dim") == 0)  { int t[] = {0,3,6};    memcpy(out,t,sizeof(t)); return 3; }
+    if (strcasecmp(suf, "m") == 0)    { int t[] = {0,3,7};    memcpy(out,t,sizeof(t)); return 3; }
+
+    // triade maggiore: "", "maj" (alias)
+    if (*suf == '\0' || strcasecmp(suf, "maj") == 0) {
+        int t[] = {0,4,7}; memcpy(out,t,sizeof(t)); return 3;
+    }
+
+    return -1; // non supportato
+}
 
 int chord_to_notes(const char* chord, int* notes) {
+    if (!chord || !*chord || !notes) return 0;
+
+    // 1) parse root
+    int ridx = -1, root_len = 0;
+    if (!root_index_from_name(chord, &ridx, &root_len)) return 0;
+
+    // 2) estrai suffisso (può essere vuoto)
+    const char* suf = chord + root_len;
+
+    // 3) ottieni intervalli dal suffisso
+    int offs[6]; // abbastanza per 7/9/6 ecc.
+    int n = chord_intervals_from_suffix(suf, offs);
+    if (n < 0) return 0;
+
+    // 4) base MIDI per la radice
+    int base = ROOT_BASE_MIDI[ridx];
+
+    // 5) costruisci le note
+    for (int i = 0; i < n; ++i) notes[i] = base + offs[i];
+
+    return n;
+}
+
+
+int old_chord_to_notes(const char* chord, int* notes) {
     // Accordi maggiori
     if (strcmp(chord, "C") == 0) {
         notes[0] = 60; notes[1] = 64; notes[2] = 67; // C E G

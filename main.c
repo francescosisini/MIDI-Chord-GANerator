@@ -5,14 +5,12 @@
 #include <getopt.h>
 #include <ctype.h>
 #include <smf.h>
+#include "section.h"
 #include "chords.h"
 #include "melody.h"
 #include "key_detection.h"
 #include "melody_generator.h"
 
-#define MAX_CHORDS 100
-#define MAX_SECTIONS 10
-#define MAX_LENGTH 10
 
 // Globals
 double SEMIMINIMA;           // Semiminima (1/4)
@@ -51,7 +49,7 @@ SectionType get_section_type(const char* name) {
 void write_midi_with_melody(char sections[MAX_SECTIONS][MAX_LENGTH], int section_repeats[MAX_SECTIONS], char section_chords[MAX_SECTIONS][MAX_CHORDS][MAX_LENGTH], int section_durations[MAX_SECTIONS][MAX_CHORDS], int song_structure[MAX_CHORDS][2], int song_structure_length, int beats_per_measure, int include_bass, int include_drums, int generate_melody, int melody_follow_key, int piano_volume, int drum_volume, int bass_volume, int melody_volume, const char* filename,MelodyResult* melody_result);
 void get_scale_notes(const char* key, int* scale_notes, int* num_notes);
 
-void print_help() {
+void old_print_help() {
     printf("Usage: melody_generator [options] [section] chord duration ... [section] chord duration ... [structure] section repeat ...\n");
     printf("Options:\n");
     printf("  -t BPM            Set the BPM (default: 90)\n");
@@ -68,6 +66,72 @@ void print_help() {
     printf("  -o filename       Set the output filename (default: output.mid)\n");
     printf("  -h                Show this help message\n");
 }
+
+void print_help() {
+    printf("Usage:\n");
+    printf("  melody_generator [options] [section] chord duration ... [section] chord duration ... [structure] section repeat ...\n\n");
+
+    printf("Options:\n");
+    printf("  -t BPM            Set the BPM (default: 90)\n");
+    printf("  -m meter          Set the meter (3 or 4, default: 4)\n");
+    printf("  -r repeats        Set the number of repeats (default: 1)\n");
+    printf("  -b                Include bass\n");
+    printf("  -d                Include drums\n");
+    printf("  -g                Generate melody\n");
+    printf("  -k                Follow key for melody\n");
+    printf("  -p piano_volume   Set the piano volume (0-127, default: 100)\n");
+    printf("  -v drum_volume    Set the drum volume (0-127, default: 100)\n");
+    printf("  -q bass_volume    Set the bass volume (0-127, default: 100)\n");
+    printf("  -w melody_volume  Set the melody volume (0-127, default: 100)\n");
+    printf("  -o filename       Set the output filename (default: output.mid)\n");
+    printf("  -h                Show this help message\n\n");
+
+    printf("Sections syntax:\n");
+    printf("  [SECTION_NAME] chord duration ...\n");
+    printf("    Example: [INTRO] C 4  G 4  Am 4  F 4\n");
+    printf("  [SONG] SECTION repeat ...   (define structure by referencing sections)\n");
+    printf("    Example: [SONG] INTRO 1  VERSE 2  CHORUS 2\n\n");
+
+    printf("Chords:\n");
+    printf("  Roots:   C  C#  D  D#  E  F  F#  G  G#  A  A#  B   (also flats: Db Eb Gb Ab Bb)\n");
+    printf("  Suffix:  (maj)  m  7  m7  maj7  dim  aug  6  m6  sus2  sus4  add9  madd9\n");
+    printf("  Notes:\n");
+    printf("    (maj)  = major triad (default when suffix omitted)\n");
+    printf("    sus2   = {root, 2nd, 5th}      | sus4 = {root, 4th, 5th}\n");
+    printf("    add9   = major triad + 9th     | madd9 = minor triad + 9th\n");
+    printf("  Examples:\n");
+    printf("    C, Am, F#maj7, Bb7, Dsus4, Gadd9, Emadd9, C6, Bdim, Aaug, Gm6\n\n");
+
+    printf("Durations:\n");
+    printf("  Duration values are counts in beats based on meter (e.g., in 4/4: 4 = a whole measure).\n\n");
+
+    printf("Full example:\n");
+    printf("  ./melody_generator -t 120 -m 4 -b -d -g -k -o my_song.mid \\\n");
+    printf("    [INTRO] C 4  G 4 \\\n");
+    printf("    [VERSE] Am 4  Em 4 \\\n");
+    printf("    [CHORUS] Cadd9 4  G 4  F 4  Dsus4 4 \\\n");
+    printf("    [SONG] INTRO 1  VERSE 2  CHORUS 2\n\n");
+
+    printf("Tips:\n");
+    printf("  - Enharmonics are accepted (e.g., C# == Db).\n");
+    printf("  - MIDI reference octave: C4 = 60.\n");
+}
+
+static int index_of_section_name(char sections[][MAX_LENGTH], int section_count, const char* name) {
+    for (int i = 0; i < section_count; ++i) {
+        const char* a = name;
+        const char* b = sections[i];
+        int ok = 1;
+        while (*a && *b) {
+            char ca = tolower((unsigned char)*a++);
+            char cb = tolower((unsigned char)*b++);
+            if (ca != cb) { ok = 0; break; }
+        }
+        if (ok && *a == '\0' && *b == '\0') return i;
+    }
+    return -1;
+}
+
 
 int main(int argc, char **argv) {
     int BPM = 90;
@@ -168,7 +232,7 @@ int main(int argc, char **argv) {
     CROMA = SEMIMINIMA / 2;            // Croma (1/8)
     SEMICROMA = SEMIMINIMA / 4;        // Semicroma (1/16)
     SEMIBREVE = 4 * SEMIMINIMA;        // Semibreve (intera)
-
+    /*
     int chord_index = 0;
     for (int i = optind; i < argc; i++) {
         if (argv[i][0] == '[' && strcmp(argv[i], "[CANZONE]") != 0) {
@@ -217,7 +281,114 @@ int main(int argc, char **argv) {
         fprintf(stderr, "No valid sections or song structure provided.\n");
         exit(EXIT_FAILURE);
     }
+    */
 
+// ------------------------------------------------------------
+// NUOVO: parsing dinamico con SectionRegistry
+// ------------------------------------------------------------
+SectionRegistry reg;
+sections_init(&reg);
+
+// Verifica che ci siano token dopo le opzioni
+if (optind >= argc) {
+    fprintf(stderr, "No sections/structure provided. See -h.\n");
+    sections_free(&reg);
+    exit(EXIT_FAILURE);
+}
+
+// Passa gli argomenti rimanenti al parser dinamico
+int leftover_argc = argc - optind;
+char** leftover_argv = &argv[optind];
+
+int prc = parse_sections_and_structure(&reg, leftover_argc, leftover_argv);
+if (prc < 0) {
+    sections_free(&reg);
+    exit(EXIT_FAILURE);
+}
+
+// Pulisci le strutture esistenti (già dichiarate prima)
+for (int s = 0; s < MAX_SECTIONS; ++s) {
+    sections[s][0] = '\0';
+    section_repeats[s] = 1; // default
+    for (int j = 0; j < MAX_CHORDS; ++j) {
+        section_chords[s][j][0] = '\0';
+        section_durations[s][j] = 0;
+    }
+}
+song_structure_length = 0;
+
+// 1) Travaso sezioni dal registry → tue strutture
+int section_count = 0;
+for (size_t i = 0; i < reg.count; ++i) {
+    if (section_count >= MAX_SECTIONS) {
+        fprintf(stderr, "Exceeded MAX_SECTIONS (%d)\n", MAX_SECTIONS);
+        sections_free(&reg);
+        exit(EXIT_FAILURE);
+    }
+    // nome sezione
+    snprintf(sections[section_count], MAX_LENGTH, "%s", reg.sections[i].name);
+    section_repeats[section_count] = 1; // ripetizioni gestite in [SONG]
+
+    // accordi/durate
+    int chord_count = 0;
+    for (size_t k = 0; k < reg.sections[i].count; ++k) {
+        if (chord_count >= MAX_CHORDS) {
+            fprintf(stderr, "Exceeded MAX_CHORDS (%d) in section '%s'\n", MAX_CHORDS, reg.sections[i].name);
+            sections_free(&reg);
+            exit(EXIT_FAILURE);
+        }
+        snprintf(section_chords[section_count][chord_count], MAX_LENGTH, "%s", reg.sections[i].items[k].chord);
+        section_durations[section_count][chord_count] = reg.sections[i].items[k].duration;
+        chord_count++;
+    }
+    section_count++;
+}
+
+// 2) Travaso struttura [SONG]
+for (size_t i = 0; i < reg.song_count; ++i) {
+    int idx = index_of_section_name(sections, section_count, reg.song[i].name);
+    if (idx < 0) {
+        fprintf(stderr, "Internal error: section '%s' referenced in [SONG] not found after conversion.\n", reg.song[i].name);
+        sections_free(&reg);
+        exit(EXIT_FAILURE);
+    }
+    if (song_structure_length >= MAX_CHORDS) {
+        fprintf(stderr, "Exceeded MAX_CHORDS in song structure array (%d)\n", MAX_CHORDS);
+        sections_free(&reg);
+        exit(EXIT_FAILURE);
+    }
+    song_structure[song_structure_length][0] = idx;                 // sezione come indice
+    song_structure[song_structure_length][1] = reg.song[i].repeats; // ripetizioni
+    song_structure_length++;
+}
+
+if (section_count == 0 || song_structure_length == 0) {
+    fprintf(stderr, "No valid sections or [SONG] structure provided.\n");
+    sections_free(&reg);
+    exit(EXIT_FAILURE);
+}
+
+// (debug) stampa come prima
+printf("Sections:\n");
+for (int i = 0; i < section_count; i++) {
+    printf("Section %d (%s), repeats %d\n", i, sections[i], section_repeats[i]);
+    for (int j = 0; j < MAX_CHORDS && section_chords[i][j][0] != 0; j++) {
+        printf("  Chord %d: %s, duration: %d\n", j, section_chords[i][j], section_durations[i][j]);
+    }
+}
+
+printf("Song structure:\n");
+for (int i = 0; i < song_structure_length; i++) {
+    printf("  Section %d (%s), repeats %d\n",
+        song_structure[i][0],
+        sections[song_structure[i][0]],
+        song_structure[i][1]);
+}
+
+// Fine parsing dinamico: userai compose_melody() e write_midi_with_melody() come prima
+
+
+    
     printf("Sections:\n");
     for (int i = 0; i <= section_index; i++) {
         printf("Section %d (%s), repeats %d\n", i, sections[i], section_repeats[i]);

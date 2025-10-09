@@ -51,30 +51,58 @@ Options
     -o filename Set the output filename (default: output.mid)
     -h Show the help message
 
-./MelodyCraft -t 120 -m 4 -b -d -g -k -p 100 -v 100 -q 100 -w 100 -o my_song.mid [INTRO] C 4 G 4 [VERSO] Am 4 Em 4 [RITORNELLO] C 4 A 4 F 4 G 4 [CANZONE] INTRO 1 VERSO 2 RITORNELLO 1 VERSO 1 RITORNELLO 2
 
-In this example:
+### Example
 
-    The BPM is set to 120.
-    The meter is 4/4.
-    Bass, drums, and melody generation are included.
-    The melody follows the key.
-    Volumes for piano, drums, bass, and melody are set to 100.
-    The output file is named my_song.mid.
+```bash
+./MelodyCraft \
+  -t 120 -m 4 -b -d -g -k \
+  -p 100 -v 100 -q 100 -w 100 \
+  -o my_song.mid \
+  [Intro] C 4  G 4 \
+  [Verse_A] Am 4  Em 4 \
+  [Chorus] C 4  A 4  F 4  G 4 \
+  [SONG] Intro 1  Verse_A 2  Chorus 1  Verse_A 1  Chorus 2
 
-The sections defined are:
+What this does
 
-    INTRO with chords C and G, each lasting 4 beats.
-    VERSO with chords Am and Em, each lasting 4 beats.
-    RITORNELLO with chords C, A, F, and G, each lasting 4 beats.
+BPM = 120
 
-The song structure is:
+Meter = 4/4
 
-    INTRO repeated once.
-    VERSO repeated twice.
-    RITORNELLO repeated once.
-    VERSO repeated once.
-    RITORNELLO repeated twice.
+Includes bass (-b), drums (-d), and melody generation (-g)
+
+Melody follows the key (-k)
+
+Volumes (piano/drums/bass/melody) = 100
+
+Output file: my_song.mid
+
+Sections defined
+
+Intro: C (4 beats), G (4 beats)
+
+Verse_A: Am (4 beats), Em (4 beats)
+
+Chorus: C (4), A (4), F (4), G (4)
+
+Song structure
+
+Intro ×1 → Verse_A ×2 → Chorus ×1 → Verse_A ×1 → Chorus ×2
+
+💡 Section names are free-form. Use any label inside brackets: [Intro], [Verse_A], [Bridge2], etc.
+
+Chord format (quick ref.)
+
+Roots: C C# D D# E F F# G G# A A# B (anche bemolli: Db Eb Gb Ab Bb)
+
+Suffixes: (maj) m 7 m7 maj7 dim aug 6 m6 sus2 sus4 add9 madd9
+
+sus2 = {root, 2nd, 5th}, sus4 = {root, 4th, 5th}
+
+add9 = major triad + 9th, madd9 = minor triad + 9th
+
+Omettere il suffisso ⇒ triade maggiore (es. C)
 
 Contributions
 

@@ -2,9 +2,9 @@
 #ifndef MELODY_GENERATOR_H
 #define MELODY_GENERATOR_H
 
-#define MAX_SECTIONS 10
+#define MAX_SECTIONS 20
 #define MAX_CHORDS 100
-#define MAX_LENGTH 10
+#define MAX_LENGTH 64
 #define MAX_MELODY_NOTES 128
 
 #define MAX_NOTES 128
