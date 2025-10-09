@@ -53,7 +53,7 @@ Options
 
 ```
 ### Example
-
+  ```bash
 ./MelodyCraft \
   -t 120 -m 4 -b -d -g -k \
   -p 100 -v 100 -q 100 -w 100 \
@@ -62,7 +62,7 @@ Options
   [Verse_A] Am 4  Em 4 \
   [Chorus] C 4  A 4  F 4  G 4 \
   [SONG] Intro 1  Verse_A 2  Chorus 1  Verse_A 1  Chorus 2
-
+```
 What this does
 
 BPM = 120
