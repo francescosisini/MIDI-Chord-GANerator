@@ -2,6 +2,72 @@
 
 MelodyCraft is a tool for generating [MIDI](MIDI.md) files with chord progressions, bass lines, drum patterns, and melodies. Users can specify different sections of a song (e.g., intro, verse, chorus) and define the song structure by arranging these sections.
 
+## 🎛️ Rapid Song Prototyping (why this exists)
+
+**MelodyCraft** is a tiny CLI to prototype songs in seconds.  
+Describe sections and chords **in one line** and get a clean, structured **MIDI** you can play or polish in a DAW.
+
+### Two frictionless workflows
+
+1) **Quick accompaniment source (MIDI)**
+   Generate an immediate harmonic/rhythmic bed to **sing** or **solo** over.
+   Perfect for fast songwriting, lead-line sketching, guided jams, and ear-training.
+
+2) **DAW skeleton (replace one track at a time)**
+   Create the **song skeleton** (piano, bass, drums, optional melody), then **swap instruments** inside your DAW (Logic, Ableton, Reaper, Ardour…).  
+   Import the MIDI, assign your plugins, refine voicings, humanize, automate.
+
+---
+
+### ⚡️ Why it works
+
+- **Human-readable input**: free-form sections (`[Intro]`, `[Verse_A]`, …), textual chords (`Eb`, `Gm`, `Cadd9`, `Dsus4`, …), durations in **beats**.
+- **Standard output**: `.mid` with **tempo** and **time-signature** meta events, separated tracks (piano, melody, bass, drums).
+- **Musical defaults**: basic grooves, optional drum fills at section boundaries, GM channels/volumes that make sense.
+- **Zero lock-in**: it’s just MIDI—edit, move, quantize, re-voice everything.
+
+---
+
+### 🚀 One-liner example
+
+```bash
+./MelodyCraft \
+  -t 120 -m 4 -b -d -g -k \
+  -p 100 -v 100 -q 100 -w 100 \
+  -o demo.mid \
+  [Intro] C 4  G 4 \
+  [Verse_A] Am 4  Em 4 \
+  [Chorus] Cadd9 4  G 4  F 4  Dsus4 4 \
+  [SONG] Intro 1  Verse_A 2  Chorus 2
+```
+BPM 120, meter 4/4
+
+- Tracks: piano, bass, drums, melody (optional)
+
+- Clear song structure with free-form section names
+
+- Open demo.mid in your DAW and you’re off to the races.
+
+## 🧩 Mini syntax reference
+
+Sections: [SectionName] followed by (CHORD DURATION_IN_BEATS) pairs
+
+Structure: [SONG] SectionName REPEATS ...
+
+Chords:
+
+Roots: C C# D D# E F F# G G# A A# B (also: Db Eb Gb Ab Bb)
+
+Suffixes: (maj) m 7 m7 maj7 dim aug 6 m6 sus2 sus4 add9 madd9
+
+sus2 = {root, 2nd, 5th}, sus4 = {root, 4th, 5th}
+
+add9 = major triad + 9th, madd9 = minor triad + 9th
+
+Omitting the suffix ⇒ major triad (e.g., C)
+
+
+
 ## Features
 
 - Generate chord progressions
