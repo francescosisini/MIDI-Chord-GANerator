@@ -56,17 +56,47 @@ Structure: [SONG] SectionName REPEATS ...
 
 Chords:
 
-Roots: C C# D D# E F F# G G# A A# B (also: Db Eb Gb Ab Bb)
+- Roots: C C# D D# E F F# G G# A A# B (also: Db Eb Gb Ab Bb)
 
-Suffixes: (maj) m 7 m7 maj7 dim aug 6 m6 sus2 sus4 add9 madd9
+- Suffixes: (maj) m 7 m7 maj7 dim aug 6 m6 sus2 sus4 add9 madd9
 
-sus2 = {root, 2nd, 5th}, sus4 = {root, 4th, 5th}
+- sus2 = {root, 2nd, 5th}, sus4 = {root, 4th, 5th}
 
-add9 = major triad + 9th, madd9 = minor triad + 9th
+- add9 = major triad + 9th, madd9 = minor triad + 9th
 
 Omitting the suffix ⇒ major triad (e.g., C)
 
+## 🧵 Workflow A — Ready-to-sing accompaniment
 
+1) Run MelodyCraft with your chord progression.
+
+2) Open output.mid in a MIDI player or DAW.
+
+3) Sing/play on top. Optionally enable -g -k for a generated melody that follows the key.
+
+Great for rapid melody ideation, lyric testing, and creative warm-ups.
+
+## 🛠️ Workflow B — DAW skeleton
+
+1) Generate the MIDI skeleton (piano/bass/drums/melody).
+
+2) Import into your DAW and replace: drums first (your kit), then bass (synth/e-bass), then piano/keys, finally the melody.
+
+3) Polish: voicings, swing/humanization, automation, FX.
+
+The form is already there—focus on sound and musical choices.
+
+🔧 Handy options (cheat-sheet)
+
+-t BPM (e.g., -t 130) · -m 3|4 (meter)
+
+-b bass · -d drums · -g melody · -k keep melody in key
+
+Volumes: -p piano · -v drums · -q bass · -w melody (0–127)
+
+-o file.mid output filename
+
+The file includes tempo and time-signature meta events at t=0, so your DAW grid/metronome matches what you set.
 
 ## Features
 
